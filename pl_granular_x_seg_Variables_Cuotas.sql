@@ -69,7 +69,7 @@ DECLARE @TipoPL varchar(2) = 'PL'
 DECLARE @G_Afil varchar(2) = 'Si'
 DECLARE @IRND varchar(2) = 'No'
 DECLARE @Tasa_IRND float = 0.4035
-DECLARE @Periodo_Min int = 202608
+DECLARE @Periodo_Min int = 202401
 DECLARE @Periodo_Max int = 202608
 DECLARE @Cod_Patrocinado varchar(2) = 'No'   -- 'Si' = segmenta Vendemas PF (RUC 20602370497) por CodigoPatrocinado | 'No' = CodigoComercio plano (igual que PnL Operativo Plantilla.sql)
 DECLARE @Excluir_VMas varchar(2) = 'Si'      -- 'Si' = excluye Fuente 'V+' | 'No' = todas las fuentes (igual que PnL Operativo Plantilla.sql)
