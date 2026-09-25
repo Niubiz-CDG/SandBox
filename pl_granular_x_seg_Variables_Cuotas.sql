@@ -72,7 +72,7 @@ DECLARE @Tasa_IRND float = 0.4035
 DECLARE @Periodo_Min int = 202608
 DECLARE @Periodo_Max int = 202608
 DECLARE @Cod_Patrocinado varchar(2) = 'No'   -- 'Si' = segmenta Vendemas PF (RUC 20602370497) por CodigoPatrocinado | 'No' = CodigoComercio plano (igual que PnL Operativo Plantilla.sql)
-DECLARE @Excluir_VMas varchar(2) = 'No'      -- 'Si' = excluye Fuente 'V+' | 'No' = todas las fuentes (igual que PnL Operativo Plantilla.sql)
+DECLARE @Excluir_VMas varchar(2) = 'Si'      -- 'Si' = excluye Fuente 'V+' | 'No' = todas las fuentes (igual que PnL Operativo Plantilla.sql)
 -- Filtro opcional de universo. NULL = sin filtro (todos los grupos economicos).
 -- Si se declara, debe ser el nombre tal como viene en el campo Grupo_Economico
 -- de [BI_Data].[V_SEGMENTO_FINANZAS]. Se resuelve DESPUES del join de segmento
@@ -139,28 +139,21 @@ SELECT
 		WHEN sr.Seg_RUC_N IS NOT NULL THEN sr.Seg_RUC_N
 	ELSE NULL END AS Segmento,
 [Volumen Niubiz] = SUM(COALESCE(CASE WHEN a.Fuente <> 'V+' THEN voltot ELSE 0 END,0)),
-[Volumen VendeMas] = SUM(COALESCE(CASE WHEN a.Fuente = 'V+' AND a.ukey NOT IN ('PRESTAMOS','RECARGAS Y SERVICIOS') THEN voltot ELSE 0 END,0)),
-[Volumen Niubiz+VendeMas] = SUM(COALESCE(CASE WHEN a.ruc <> '20602370497' AND a.fuente not IN ('V+') THEN voltot ELSE 0 END,0))+SUM(COALESCE(CASE WHEN a.Fuente = 'V+' AND a.ukey NOT IN ('PRESTAMOS','RECARGAS Y SERVICIOS') THEN voltot ELSE 0 END,0)),
 
 [Transacciones Niubiz] = SUM(COALESCE(CASE WHEN a.Fuente <> 'V+' THEN txstot ELSE 0 END,0)),
-[Transacciones VendeMas] = SUM(COALESCE(CASE WHEN a.Fuente = 'V+' AND a.ukey NOT IN ('PRESTAMOS','RECARGAS Y SERVICIOS') THEN txstot ELSE 0 END,0)),
-[Transacciones Niubiz+VendeMas] = SUM(COALESCE(CASE WHEN a.ruc <> '20602370497' AND a.fuente not IN ('V+') THEN txstot ELSE 0 END,0))+SUM(COALESCE(CASE WHEN a.Fuente = 'V+' AND a.ukey NOT IN ('PRESTAMOS','RECARGAS Y SERVICIOS') THEN txstot ELSE 0 END,0)),
 
 [Comision Total Niubiz] = SUM(COALESCE(CASE WHEN a.Fuente <> 'V+' THEN CTTOT ELSE 0 END,0)),
-[Comision Total VendeMas] = SUM(COALESCE(CASE WHEN a.Fuente = 'V+' AND a.ukey NOT IN ('PRESTAMOS','RECARGAS Y SERVICIOS') THEN CTTOT ELSE 0 END,0)),
-[Comision Total Niubiz+VendeMas] = SUM(COALESCE(CASE WHEN a.Fuente <> 'V+' THEN CTTOT ELSE 0 END,0))+SUM(COALESCE(CASE WHEN a.Fuente = 'V+' AND a.ukey NOT IN ('PRESTAMOS','RECARGAS Y SERVICIOS') THEN CVTOT ELSE 0 END,0)),
 
 [Comision Adquirente Niubiz] = SUM(COALESCE(CASE WHEN a.Fuente <> 'V+' THEN CVTOT ELSE 0 END,0)),
-[Comision Adquirente VendeMas] = SUM(COALESCE(CASE WHEN a.Fuente = 'V+' AND a.ukey NOT IN ('PRESTAMOS','RECARGAS Y SERVICIOS') THEN CVTOT ELSE 0 END,0)),
-[Comision Adquirente Niubiz+VendeMas] = SUM(COALESCE(CASE WHEN a.Fuente <> 'V+' THEN CVTOT ELSE 0 END,0))+ SUM(COALESCE(CASE WHEN a.Fuente = 'V+' AND a.ukey NOT IN ('PRESTAMOS','RECARGAS Y SERVICIOS') THEN CVTOT ELSE 0 END,0)),
 
 [Transacciones SVA Data] = SUM(COALESCE(TransaccionesData,0))+SUM(COALESCE(CASE WHEN a.Fuente = 'V+' AND a.ukey IN ('PRESTAMOS','RECARGAS Y SERVICIOS') THEN txstot ELSE 0 END,0)),
+/*
 [Numero de POS SVA a Cobrar] = SUM(COALESCE(POSCobrar,0)),
+*/
 [Volumen SVA Data] = SUM(COALESCE(Tarjetas,0))+SUM(COALESCE(CASE WHEN a.Fuente = 'V+' AND a.ukey IN ('PRESTAMOS','RECARGAS Y SERVICIOS') THEN voltot ELSE 0 END,0)),
 ------------------------------------------------------------
 ------------------------------------------------------------
-[Transacciones SAS Post] = SUM(COALESCE(Trx_SAS_Pos,0)),
-[Transacciones SAS Pre] = SUM(COALESCE(Trx_SAS_Pre,0)),
+/*
 ------------------------------------------------------------
 ------------------------------------------------------------
 [Movimiento] = SUM(COALESCE(CASE WHEN a.ruc ='20602370497' AND a.fuente not IN ('V+') THEN 0 ELSE a.Movimiento END,0)),
@@ -199,6 +192,7 @@ SELECT
 [1.2.1.- Autenticación VbV MPI] = SUM(COALESCE([Cost Autenticacion],0))* @Factor_IRND,
 [1.2.2.- Autenticación VbV VISA] = SUM(COALESCE([Cost VerifiedbyVisa],0))* @Factor_IRND,
 [1.2.3.- Costo Pago Adquirentes] = 0,
+*/
 [1.2.4.- Cuota MC Fijo Foraneo] = SUM(COALESCE(CASE WHEN a.codproductonbo = 'VD' THEN 0 ELSE [MC_TRX_FOR_6393288FIJONP] END,0))* @Factor_IRND,
 [1.2.5.- Cuota MC Fijo Nacional] = SUM(COALESCE(CASE WHEN a.codproductonbo = 'VD' THEN 0 ELSE [MC_TRX_NAC_6393289FIJONP] END,0))* @Factor_IRND,
 [1.2.6.- Cuota MC Fijo Total] = 
@@ -389,6 +383,7 @@ SELECT
 [1.2.21.2.- Cuota Suscripciones MC] = SUM(COALESCE([Gasto_Cuotas_Suscripciones_MC],0))* @Factor_IRND,
 [1.2.22.1.- Cuota Fee Anual Visa] = SUM(COALESCE([Gasto_Cuotas_Fee_Anual_VI],0))* @Factor_IRND,
 [1.2.22.2.- Cuota Fee Anual MC] = SUM(COALESCE([Gasto_Cuotas_Fee_Anual_MC],0))* @Factor_IRND,
+/*
 ------------------------------------------------------------
 ------------------------------------------------------------
 [2.1.1.- Ing. Analytics] = SUM(COALESCE([CostoAnalytics],0)),
@@ -498,6 +493,7 @@ END,
 [2.1.20.- Ing. PIFO] = sum(coalesce([cp_ing_pifo],0)),
 ------------------------------------------------------------
 ------------------------------------------------------------
+*/
 [2.2.1.- Cuotas MoneySend] = SUM(COALESCE([MC_VD0_VD1_6393310VARNP],0))* @Factor_IRND,
 [2.2.2.- Cuotas VisaDirect P2P] = 
 	(SUM(COALESCE([VI_VD0_VD1_6393225VARNP],0))+
@@ -515,6 +511,7 @@ END,
 	SUM(COALESCE([VI_VD7_6393308VARNP],0))+
 	SUM(COALESCE([VI_VD9_6393336VarNP],0))
 	)* @Factor_IRND,
+/*
 [2.2.4.- Gasto Cupo] = SUM(COALESCE(costocupo,0)),
 [2.2.5.- Gasto Flotas] = SUM(COALESCE([GastoFlotas],0)),
 [2.2.6.- Gasto Recargas y Servicios] = 
@@ -588,13 +585,15 @@ END,
 [3.2.6.- Gasto Digitacion y Monitoreo] = 
 	SUM(COALESCE([Afiliacion CPA DigitMonit],0))+
 	SUM(COALESCE([Digitacion_Monitoreo],0)),
+*/
 [3.2.7.1.- Cuotas DCC Fija] = 
 	SUM(COALESCE([DCC_Cuotas],0))+	
 	(SUM(COALESCE(CASE WHEN a.codproductonbo = 'VD' THEN 0 ELSE [VI_TRX_FOR_6393222FIJONP] END,0))+
 	SUM(COALESCE(CASE WHEN a.codproductonbo = 'VD' THEN 0 ELSE [VI_TRX_FOR_6393222FIJOP] END,0)))* @Factor_IRND,
 [3.2.7.2.- Cuotas DCC Variable] = 
 	(SUM(COALESCE(CASE WHEN a.codproductonbo = 'VD' THEN 0 ELSE [VI_VOL_FOR_6393243VARNP] END,0))+												
-	SUM(COALESCE(CASE WHEN a.codproductonbo = 'VD' THEN 0 ELSE [VI_VOL_FOR_6393243VARP] END,0)))* @Factor_IRND,
+	SUM(COALESCE(CASE WHEN a.codproductonbo = 'VD' THEN 0 ELSE [VI_VOL_FOR_6393243VARP] END,0)))* @Factor_IRND
+/*
 [3.2.8.- Gasto Call Center - CPA] =
 	SUM(COALESCE(CASE WHEN @G_Afil = 'Si' THEN [Cost_Call_Afil] ELSE 0 END,0)),
 [3.2.9.1.- Gastos por afiliación - Multiagente Real] = SUM(COALESCE(CASE WHEN @G_Afil = 'Si' THEN [Afiliacion Costo] ELSE 0 END,0)),
@@ -751,6 +750,7 @@ SUM(COALESCE(CASE WHEN @TipoPL = 'FC' THEN 0 ELSE [DepreciacionProvision] END,0)
 [5.8.2.- Gasto Depreciación Inactiva] = 
 --SUM(COALESCE(CASE WHEN @TipoPL = 'FC' OR h.Tipo NOT IN ('Presencial') THEN 0 ELSE [DepreciacionInactiva] END,0)), --nuevo
 SUM(COALESCE(CASE WHEN @TipoPL = 'FC' THEN 0 ELSE [DepreciacionInactiva] END,0)) --nuevo
+*/
 ------------------------------------------------------------
 ------------------------------------------------------------
 FROM (
@@ -854,6 +854,7 @@ SELECT *,
 [1.2.20.- Cuota PIPF] = [1.2.20.1.- Cuota PIPF Visa] + [1.2.20.2.- Cuota PIPF MC],
 [1.2.21.- Cuota Suscripciones] = [1.2.21.1.- Cuota Suscripciones Visa] + [1.2.21.2.- Cuota Suscripciones MC],
 [1.2.22.- Cuota Fee Anual] = [1.2.22.1.- Cuota Fee Anual Visa] + [1.2.22.2.- Cuota Fee Anual MC],
+/*
 
 [3.1.5.- Ing. DCC] = [3.1.5.1.- Ing. DCC Cobro al TH] + [3.1.5.2.- Dscto. DCC Comercio],
 [3.1.14.- Ing. Por reparacion / Robo POS] = [3.1.14.1.- Ing. Por reparacion] + [3.1.14.2.- Ing. Por Robo POS],
@@ -862,7 +863,9 @@ SELECT *,
 [3.2.5.- Gastos por afiliación] = 
 	[3.2.5.1.- Gastos por afiliación Legacy] + [3.2.5.2.- Gastos por afiliación Real] + 
 	[3.2.5.3.- Gastos por afiliación Provision] + [3.2.5.4.- Gastos por afiliación Extorno],
-[3.2.7.- Cuotas DCC] = [3.2.7.1.- Cuotas DCC Fija] + [3.2.7.2.- Cuotas DCC Variable],
+*/
+[3.2.7.- Cuotas DCC] = [3.2.7.1.- Cuotas DCC Fija] + [3.2.7.2.- Cuotas DCC Variable]
+/*
 [3.2.9.- Gastos por afiliación - Multiagente] = 
 	[3.2.9.1.- Gastos por afiliación - Multiagente Real] + [3.2.9.2.- Gastos por afiliación - Multiagente Provision] + [3.2.9.3.- Gastos por afiliación - Multiagente Extorno],
 
@@ -1008,6 +1011,7 @@ SELECT *,
 [5.6.- G.Personal Back] = [5.6.1.- Gasto de Personal Middle],
 [5.7.- G.Alquiler Almacenes] = [5.7.1.- Gasto Alquileres],
 [5.8.- G.Dep y Amort] = [5.8.1.- Gasto Depreciación Baja] + [5.8.2.- Gasto Depreciación Inactiva]
+*/
 
 FROM #PL_Granular
 ) AS a;
@@ -1367,111 +1371,127 @@ SELECT
 	a.[Fuente],
 	a.[Segmento],
 	a.[Volumen Niubiz],
-	a.[Volumen VendeMas],
-	a.[Volumen Niubiz+VendeMas],
+	
 	a.[Transacciones Niubiz],
-	a.[Transacciones VendeMas],
-	a.[Transacciones Niubiz+VendeMas],
+	
 	a.[Comision Total Niubiz],
-	a.[Comision Total VendeMas],
-	a.[Comision Total Niubiz+VendeMas],
+	
 	a.[Comision Adquirente Niubiz],
-	a.[Comision Adquirente VendeMas],
-	a.[Comision Adquirente Niubiz+VendeMas],
-	a.[Transacciones SVA Data],
-	a.[Volumen SVA Data],
-	a.[Transacciones SAS Post],
-	a.[Transacciones SAS Pre],
-	a.[1.2.4.- Cuota MC Fijo Foraneo],
-	a.[1.2.5.- Cuota MC Fijo Nacional],
-	a.[1.2.6.- Cuota MC Fijo Total],
-	a.[1.2.7.1.- Cuota MC Ticket Foraneo],
-	a.[1.2.7.2.- Cuota MC Ticket Nacional],
-	a.[1.2.7.- Cuota MC Ticket],
-	a.[1.2.8.1.1.- Cuota MC Var Foraneo Volumen USD],
-	a.[1.2.8.1.2.- Cuota MC Var Foraneo Volumen PEN],
-	a.[1.2.8.1.3.- Cuota MC Var Foraneo Volumen Otros CP],
-	a.[1.2.8.1.4.- Cuota MC Var Foraneo Volumen Otros CNP],
-	a.[1.2.8.1.5.- Cuota MC Var Foraneo Volumen Otros],
-	a.[1.2.8.1.- Cuota MC Var Foraneo Volumen],
-	a.[1.2.8.2.1.- Cuota MC Var Foraneo Transacciones Autor. y Liq.],
-	a.[1.2.8.2.2.- Cuota MC Var Foraneo Transacciones Otros CNP],
-	a.[1.2.8.2.3.- Cuota MC Var Foraneo Transacciones Otros],
-	a.[1.2.8.2.- Cuota MC Var Foraneo Transacciones],
-	a.[1.2.8.3.1- Cuota MC Var Foraneo Performance Otros CNP],
-	a.[1.2.8.3.2- Cuota MC Var Foraneo Performance Otros],
-	a.[1.2.8.3.- Cuota MC Var Foraneo Performance],
-	a.[1.2.8.- Cuota MC Var Foraneo],
-	a.[1.2.9.1.1.- Cuota MC Var Nacional Volumen Directo],
-	a.[1.2.9.1.2.- Cuota MC Var Nacional Volumen Otros CP],
-	a.[1.2.9.1.3.- Cuota MC Var Nacional Volumen Otros CNP],
-	a.[1.2.9.1.4.- Cuota MC Var Nacional Volumen Otros],
-	a.[1.2.9.1.- Cuota MC Var Nacional Volumen],
-	a.[1.2.9.2.- Cuota MC Var Nacional Transacciones],
-	a.[1.2.9.3.- Cuota MC Var Nacional Performance],
-	a.[1.2.9.- Cuota MC Var Nacional],
-	a.[1.2.10.1.- Cuota MC Var Total Vol/Txs],
-	a.[1.2.10.2.- Cuota MC Var Total Performance],
-	a.[1.2.10.- Cuota MC Var Total],
-	a.[1.2.11.1.- Cuota Reintentos Visa],
-	a.[1.2.11.2.- Cuota Reintentos MC],
-	a.[1.2.11.3.- Cuota Reintentos Legacy],
-	a.[1.2.11.- Cuota Reintentos],
-	a.[1.2.12.- Cuota Visa Fijo Foraneo],
-	a.[1.2.13.- Cuota Visa Fijo Nacional],
-	a.[1.2.14.- Cuota Visa Fijo Total],
-	a.[1.2.15.1.- Cuota Visa Ticket Foraneo],
-	a.[1.2.15.1.1- Cuota Visa Ticket Foraneo Otros CP],
-	a.[1.2.15.1.2- Cuota Visa Ticket Foraneo Otros CNP],
-	a.[1.2.15.2.- Cuota Visa Ticket Debito],
-	a.[1.2.15.2.1.- Cuota Visa Ticket Debito Otros CP],
-	a.[1.2.15.2.2.- Cuota Visa Ticket Debito Otros CNP],
-	a.[1.2.15.3.- Cuota Visa Ticket Credito],
-	a.[1.2.15.3.1.- Cuota Visa Ticket Credito Otros CP],
-	a.[1.2.15.3.2.- Cuota Visa Ticket Credito Otros CNP],
-	a.[1.2.15.- Cuota Visa Ticket],
-	a.[1.2.16.1.1.- Cuota Visa Var Foraneo Volumen PEN],
-	a.[1.2.16.1.2.- Cuota Visa Var Foraneo Volumen USD CNP],
-	a.[1.2.16.1.3.- Cuota Visa Var Foraneo Volumen USD],
-	a.[1.2.16.1.4.- Cuota Visa Var Foraneo Volumen Otros],
-	a.[1.2.16.1.- Cuota Visa Var Foraneo Volumen],
-	a.[1.2.16.2.- Cuota Visa Var Foraneo Transacciones],
-	a.[1.2.16.3.- Cuota Visa Var Foraneo Performance],
-	a.[1.2.16.- Cuota Visa Var Foraneo],
-	a.[1.2.17.1.1.- Cuota Visa Var Nacional Volumen Debito],
-	a.[1.2.17.1.2.- Cuota Visa Var Nacional Volumen Credito],
-	a.[1.2.17.1.3.- Cuota Visa Var Nacional Volumen No Token],
-	a.[1.2.17.1.- Cuota Visa Var Nacional Volumen],
-	a.[1.2.17.2.- Cuota Visa Var Nacional Transacciones],
-	a.[1.2.17.3.- Cuota Visa Var Nacional Performance],
-	a.[1.2.17.4.- Cuota Visa Var Nacional 4900 DASF Fijo],
-	a.[1.2.17.5.- Cuota Visa Var Nacional 9311 DASF Fijo Debito],
-	a.[1.2.17.6.- Cuota Visa Var Nacional 9311 DASF Fijo Credito],
-	a.[1.2.17.- Cuota Visa Var Nacional],
-	a.[1.2.18.1.- Cuota Visa Var Total Vol/Txs],
-	a.[1.2.18.2.- Cuota Visa Var Total Performance],
-	a.[1.2.18.3.- Cuota Visa Var Total Tokenizacion],
-	a.[1.2.18.- Cuota Visa Var Total],
-	a.[1.2.19.1.- Cuota Multas Visa],
-	a.[1.2.19.2.- Cuota Multas MC],
-	a.[1.2.19.- Cuota Multas],
-	a.[1.2.20.1.- Cuota PIPF Visa],
-	a.[1.2.20.2.- Cuota PIPF MC],
-	a.[1.2.20.- Cuota PIPF],
-	a.[1.2.21.1.- Cuota Suscripciones Visa],
-	a.[1.2.21.2.- Cuota Suscripciones MC],
-	a.[1.2.21.- Cuota Suscripciones],
-	a.[1.2.22.1.- Cuota Fee Anual Visa],
-	a.[1.2.22.2.- Cuota Fee Anual MC],
-	a.[1.2.22.- Cuota Fee Anual],
-	a.[1. Comisión Adquirente],
-	a.[2.2.1.- Cuotas MoneySend],
-	a.[2.2.2.- Cuotas VisaDirect P2P],
-	a.[2.2.3.- Cuotas VisaDirect PP],
-	a.[3.1.20.- Ing. de Comision No Adquirente],
-	a.[3.2.7.1.- Cuotas DCC Fija],
-	a.[3.2.7.2.- Cuotas DCC Variable],
-	a.[3.2.7.- Cuotas DCC]
+	
+	--a.[Transacciones SVA Data],
+	--a.[Volumen SVA Data],
+	
+	-- a.[1.2.4.- Cuota MC Fijo Foraneo],
+	-- a.[1.2.5.- Cuota MC Fijo Nacional],
+	-- a.[1.2.6.- Cuota MC Fijo Total],
+	-- -- a.[1.2.7.1.- Cuota MC Ticket Foraneo],
+	-- -- a.[1.2.7.2.- Cuota MC Ticket Nacional],
+	-- a.[1.2.7.- Cuota MC Ticket],
+	-- -- a.[1.2.8.1.1.- Cuota MC Var Foraneo Volumen USD],
+	-- -- a.[1.2.8.1.2.- Cuota MC Var Foraneo Volumen PEN],
+	-- -- a.[1.2.8.1.3.- Cuota MC Var Foraneo Volumen Otros CP],
+	-- -- a.[1.2.8.1.4.- Cuota MC Var Foraneo Volumen Otros CNP],
+	-- -- a.[1.2.8.1.5.- Cuota MC Var Foraneo Volumen Otros],
+	-- -- a.[1.2.8.1.- Cuota MC Var Foraneo Volumen],
+	-- -- a.[1.2.8.2.1.- Cuota MC Var Foraneo Transacciones Autor. y Liq.],
+	-- -- a.[1.2.8.2.2.- Cuota MC Var Foraneo Transacciones Otros CNP],
+	-- -- a.[1.2.8.2.3.- Cuota MC Var Foraneo Transacciones Otros],
+	-- -- a.[1.2.8.2.- Cuota MC Var Foraneo Transacciones],
+	-- -- a.[1.2.8.3.1- Cuota MC Var Foraneo Performance Otros CNP],
+	-- -- a.[1.2.8.3.2- Cuota MC Var Foraneo Performance Otros],
+	-- -- a.[1.2.8.3.- Cuota MC Var Foraneo Performance],
+	-- a.[1.2.8.- Cuota MC Var Foraneo],
+	-- -- a.[1.2.9.1.1.- Cuota MC Var Nacional Volumen Directo],
+	-- -- a.[1.2.9.1.2.- Cuota MC Var Nacional Volumen Otros CP],
+	-- -- a.[1.2.9.1.3.- Cuota MC Var Nacional Volumen Otros CNP],
+	-- -- a.[1.2.9.1.4.- Cuota MC Var Nacional Volumen Otros],
+	-- -- a.[1.2.9.1.- Cuota MC Var Nacional Volumen],
+	-- -- a.[1.2.9.2.- Cuota MC Var Nacional Transacciones],
+	-- -- a.[1.2.9.3.- Cuota MC Var Nacional Performance],
+	-- a.[1.2.9.- Cuota MC Var Nacional],
+	-- -- a.[1.2.10.1.- Cuota MC Var Total Vol/Txs],
+	-- -- a.[1.2.10.2.- Cuota MC Var Total Performance],
+	-- a.[1.2.10.- Cuota MC Var Total],
+	-- -- a.[1.2.11.1.- Cuota Reintentos Visa],
+	-- -- a.[1.2.11.2.- Cuota Reintentos MC],
+	-- -- a.[1.2.11.3.- Cuota Reintentos Legacy],
+	-- a.[1.2.11.- Cuota Reintentos],
+	-- a.[1.2.12.- Cuota Visa Fijo Foraneo],
+	-- a.[1.2.13.- Cuota Visa Fijo Nacional],
+	-- a.[1.2.14.- Cuota Visa Fijo Total],
+	-- -- a.[1.2.15.1.- Cuota Visa Ticket Foraneo],
+	-- -- a.[1.2.15.1.1- Cuota Visa Ticket Foraneo Otros CP],
+	-- -- a.[1.2.15.1.2- Cuota Visa Ticket Foraneo Otros CNP],
+	-- -- a.[1.2.15.2.- Cuota Visa Ticket Debito],
+	-- -- a.[1.2.15.2.1.- Cuota Visa Ticket Debito Otros CP],
+	-- -- a.[1.2.15.2.2.- Cuota Visa Ticket Debito Otros CNP],
+	-- -- a.[1.2.15.3.- Cuota Visa Ticket Credito],
+	-- -- a.[1.2.15.3.1.- Cuota Visa Ticket Credito Otros CP],
+	-- -- a.[1.2.15.3.2.- Cuota Visa Ticket Credito Otros CNP],
+	-- a.[1.2.15.- Cuota Visa Ticket],
+	-- -- a.[1.2.16.1.1.- Cuota Visa Var Foraneo Volumen PEN],
+	-- -- a.[1.2.16.1.2.- Cuota Visa Var Foraneo Volumen USD CNP],
+	-- -- a.[1.2.16.1.3.- Cuota Visa Var Foraneo Volumen USD],
+	-- -- a.[1.2.16.1.4.- Cuota Visa Var Foraneo Volumen Otros],
+	-- -- a.[1.2.16.1.- Cuota Visa Var Foraneo Volumen],
+	-- -- a.[1.2.16.2.- Cuota Visa Var Foraneo Transacciones],
+	-- -- a.[1.2.16.3.- Cuota Visa Var Foraneo Performance],
+	-- a.[1.2.16.- Cuota Visa Var Foraneo],
+	-- -- a.[1.2.17.1.1.- Cuota Visa Var Nacional Volumen Debito],
+	-- -- a.[1.2.17.1.2.- Cuota Visa Var Nacional Volumen Credito],
+	-- -- a.[1.2.17.1.3.- Cuota Visa Var Nacional Volumen No Token],
+	-- -- a.[1.2.17.1.- Cuota Visa Var Nacional Volumen],
+	-- -- a.[1.2.17.2.- Cuota Visa Var Nacional Transacciones],
+	-- -- a.[1.2.17.3.- Cuota Visa Var Nacional Performance],
+	-- -- a.[1.2.17.4.- Cuota Visa Var Nacional 4900 DASF Fijo],
+	-- -- a.[1.2.17.5.- Cuota Visa Var Nacional 9311 DASF Fijo Debito],
+	-- -- a.[1.2.17.6.- Cuota Visa Var Nacional 9311 DASF Fijo Credito],
+	-- a.[1.2.17.- Cuota Visa Var Nacional],
+	-- -- a.[1.2.18.1.- Cuota Visa Var Total Vol/Txs],
+	-- -- a.[1.2.18.2.- Cuota Visa Var Total Performance],
+	-- -- a.[1.2.18.3.- Cuota Visa Var Total Tokenizacion],
+	-- a.[1.2.18.- Cuota Visa Var Total],
+	-- -- a.[1.2.19.1.- Cuota Multas Visa],
+	-- -- a.[1.2.19.2.- Cuota Multas MC],
+	-- a.[1.2.19.- Cuota Multas],
+	-- -- a.[1.2.20.1.- Cuota PIPF Visa],
+	-- -- a.[1.2.20.2.- Cuota PIPF MC],
+	-- a.[1.2.20.- Cuota PIPF],
+	-- -- a.[1.2.21.1.- Cuota Suscripciones Visa],
+	-- -- a.[1.2.21.2.- Cuota Suscripciones MC],
+	-- a.[1.2.21.- Cuota Suscripciones],
+	-- -- a.[1.2.22.1.- Cuota Fee Anual Visa],
+	-- -- a.[1.2.22.2.- Cuota Fee Anual MC],
+	-- a.[1.2.22.- Cuota Fee Anual],
+
+	[Total Cuotas ADQ.] = 
+		(a.[1.2.4.- Cuota MC Fijo Foraneo]
+		+ a.[1.2.5.- Cuota MC Fijo Nacional]
+		+ a.[1.2.6.- Cuota MC Fijo Total]
+		+ a.[1.2.7.- Cuota MC Ticket]
+		+ a.[1.2.8.- Cuota MC Var Foraneo]
+		+ a.[1.2.9.- Cuota MC Var Nacional]
+		+ a.[1.2.10.- Cuota MC Var Total]
+		+ a.[1.2.11.- Cuota Reintentos]
+		+ a.[1.2.12.- Cuota Visa Fijo Foraneo]
+		+ a.[1.2.13.- Cuota Visa Fijo Nacional]
+		+ a.[1.2.14.- Cuota Visa Fijo Total]
+		+ a.[1.2.15.- Cuota Visa Ticket]
+		+ a.[1.2.16.- Cuota Visa Var Foraneo]
+		+ a.[1.2.17.- Cuota Visa Var Nacional]
+		+ a.[1.2.18.- Cuota Visa Var Total]
+		+ a.[1.2.19.- Cuota Multas]
+		+ a.[1.2.20.- Cuota PIPF]
+		+ a.[1.2.21.- Cuota Suscripciones]
+		+ a.[1.2.22.- Cuota Fee Anual]),
+	
+	[Total Cuotas VisaDirect] = 
+		(
+			a.[2.2.1.- Cuotas MoneySend]
+			+ a.[2.2.2.- Cuotas VisaDirect P2P]
+			+ a.[2.2.3.- Cuotas VisaDirect PP]
+		)	
+			
 FROM #PL_Subtotals AS a
 ORDER BY a.[Periodo], a.[Fuente], a.[Segmento];
 
